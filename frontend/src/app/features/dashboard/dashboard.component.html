@@ -1,0 +1,301 @@
+<p-toast position="top-right" />
+
+<div class="dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-th-large"></i></div>
+      <div>
+        <h2>Panel Administrativo</h2>
+        <span class="subtitle">Gestión de suscripciones, facturación y métricas</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <p-button icon="pi pi-sync" label="Verificar Vencimientos" severity="warning"
+        [outlined]="true" size="small" [loading]="checkingExpirations()"
+        (onClick)="onCheckExpirations()" />
+      <p-button icon="pi pi-user-plus" label="Asignar Plan" severity="danger"
+        size="small" (onClick)="showAssignDialog = true" />
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <app-kpi-card title="Total Clientes" [value]="users().length" icon="pi pi-users" color="blue" />
+    <app-kpi-card title="Usuarios Activos" [value]="report()?.totalActiveSubscriptions ?? 0" icon="pi pi-check-circle" color="green" />
+    <app-kpi-card title="Usuarios Vencidos" [value]="report()?.totalExpiredSubscriptions ?? 0" icon="pi pi-times-circle" color="red" />
+    <app-kpi-card title="Recaudación Total" [value]="(report()?.totalRevenue ?? 0 | cop)" icon="pi pi-wallet" color="green" />
+  </div>
+
+  <!-- Tabs -->
+  <p-tabView>
+    <!-- Métricas -->
+    <p-tabPanel header="Métricas" leftIcon="pi pi-chart-bar">
+      <div class="charts-grid">
+        <p-panel header="Activos vs Vencidos" [toggleable]="true">
+          <p-chart type="doughnut" [data]="chartData()" [options]="chartOpts" height="300px" />
+        </p-panel>
+        <p-panel header="Distribución por Estado" [toggleable]="true">
+          <p-chart type="bar" [data]="barData()" [options]="barOpts" height="300px" />
+        </p-panel>
+      </div>
+      <div class="invoice-kpi-grid">
+        <div class="invoice-kpi green">
+          <div><div class="kpi-label">Facturas Pagadas</div><div class="kpi-value" style="color:#16A34A">{{ paidCount() }}</div></div>
+          <p-tag value="PAGADAS" severity="success" icon="pi pi-check" />
+        </div>
+        <div class="invoice-kpi yellow">
+          <div><div class="kpi-label">Facturas Pendientes</div><div class="kpi-value" style="color:#D97706">{{ pendingCount() }}</div><div class="kpi-sub">{{ pendingBilling() | cop }}</div></div>
+          <p-tag value="PENDIENTES" severity="warning" icon="pi pi-clock" />
+        </div>
+        <div class="invoice-kpi red">
+          <div><div class="kpi-label">Facturas Vencidas</div><div class="kpi-value" style="color:#DC2626">{{ overdueCount() }}</div></div>
+          <p-tag value="VENCIDAS" severity="danger" icon="pi pi-exclamation-triangle" />
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- Gestión Planes -->
+    <p-tabPanel header="Gestión de Planes" leftIcon="pi pi-users">
+      <div class="filter-bar">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText [(ngModel)]="searchTerm" placeholder="Buscar cliente..." style="width:240px" />
+        </span>
+        <p-dropdown [options]="statusOptions" [(ngModel)]="filterStatus" (onChange)="loadSubscriptions()" placeholder="Estado" [showClear]="true" styleClass="w-10rem" />
+        <div style="flex:1"></div>
+        <p-button icon="pi pi-user-plus" label="Asignar Plan" severity="danger" size="small" (onClick)="showAssignDialog = true" />
+      </div>
+
+      <div class="table-wrapper">
+      <p-table [value]="filteredRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [loading]="loadingSubs()" [rowHover]="true" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="userName" style="width:240px">Cliente <p-sortIcon field="userName" /></th>
+            <th pSortableColumn="planName">Plan <p-sortIcon field="planName" /></th>
+            <th>Tipo</th>
+            <th pSortableColumn="startDate">Inicio <p-sortIcon field="startDate" /></th>
+            <th pSortableColumn="endDate">Fin <p-sortIcon field="endDate" /></th>
+            <th>Estado</th>
+            <th style="width:80px;text-align:center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td><strong style="font-size:13px">{{ row.userName }}</strong><br><span style="font-size:11px;color:#999">{{ row.userEmail }}</span></td>
+            <td style="font-weight:600;font-size:13px">{{ row.planName }}</td>
+            <td><app-status-badge [status]="row.planType" /></td>
+            <td style="font-size:13px">{{ row.startDate | date:'dd/MM/yyyy' }}</td>
+            <td style="font-size:13px">{{ row.endDate | date:'dd/MM/yyyy' }}</td>
+            <td><app-status-badge [status]="row.status" /></td>
+            <td style="text-align:center">
+              @if (row.status !== 'CANCELLED') {
+                <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small"
+                  (onClick)="openSubMenu($event, row, globalSubMenu)" />
+              } @else {
+                <span style="color:#bbb;font-size:12px">—</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="7" style="text-align:center;padding:32px;color:#999">No se encontraron suscripciones</td></tr></ng-template>
+      </p-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- Facturación -->
+    <p-tabPanel header="Facturación" leftIcon="pi pi-file-edit">
+
+      <!-- Tarjetas de tarifas -->
+      <div class="section-title">
+        <i class="pi pi-calculator"></i>
+        <span>Tarifas Automáticas por Plan</span>
+      </div>
+
+      <div class="rates-grid">
+        @for (rate of billingRates(); track rate.planId) {
+          <div class="rate-card" [class.bronze]="rate.planType==='BRONZE'" [class.silver]="rate.planType==='SILVER'" [class.gold]="rate.planType==='GOLD'">
+            <div class="rate-badge">
+              <div class="rate-icon">
+                <i class="pi pi-star"></i>
+              </div>
+              <span class="rate-plan-name">{{ rate.planName }}</span>
+              <span class="rate-plan-type">{{ rate.planType }}</span>
+            </div>
+            <div class="rate-body">
+              <div class="rate-line">
+                <span class="rate-label">Precio base</span>
+                <span class="rate-amount">{{ rate.basePrice | cop }}</span>
+              </div>
+              @if (rate.discount > 0) {
+                <div class="rate-line discount">
+                  <span class="rate-label">Descuento</span>
+                  <span class="rate-amount">-{{ rate.discount | cop }}</span>
+                </div>
+              }
+              <div class="rate-line">
+                <span class="rate-label">Subtotal</span>
+                <span class="rate-amount">{{ rate.subtotal | cop }}</span>
+              </div>
+              <div class="rate-line">
+                <span class="rate-label">IVA (19%)</span>
+                <span class="rate-amount">{{ rate.tax | cop }}</span>
+              </div>
+              <div class="rate-divider"></div>
+              <div class="rate-line total">
+                <span class="rate-label">Total a facturar</span>
+                <span class="rate-amount">{{ rate.total | cop }}</span>
+              </div>
+            </div>
+            <div class="rate-footer">{{ rate.description }}</div>
+          </div>
+        }
+      </div>
+
+      <!-- Tabla de facturas -->
+      <div class="section-title" style="margin-top:32px">
+        <i class="pi pi-file-edit"></i>
+        <span>Listado de Facturas</span>
+        <div style="flex:1"></div>
+        <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" size="small" (onClick)="loadInvoices()" pTooltip="Recargar" />
+      </div>
+
+      <div class="legend-bar">
+        <div class="legend-item warning"><i class="pi pi-clock"></i> Pendiente = Prefactura</div>
+        <div class="legend-item success"><i class="pi pi-check"></i> Pagada = Suma a ingresos</div>
+        <div class="legend-item danger"><i class="pi pi-exclamation-triangle"></i> Vencida = En mora</div>
+      </div>
+
+      <div class="table-wrapper">
+        <p-table [value]="invoices()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [rowHover]="true" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>N° Factura</th>
+              <th>Base (COP)</th>
+              <th>Descuento</th>
+              <th>Subtotal</th>
+              <th>IVA 19%</th>
+              <th pSortableColumn="total">Total (COP) <p-sortIcon field="total" /></th>
+              <th pSortableColumn="dueDate">Vencimiento <p-sortIcon field="dueDate" /></th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-inv>
+            <tr>
+              <td><code class="invoice-code">{{ inv.id | slice:0:8 }}</code></td>
+              <td class="font-mono cell-amount">{{ inv.basePrice | cop }}</td>
+              <td class="font-mono cell-amount" [class.cell-discount]="inv.discount > 0">{{ inv.discount > 0 ? '-' : '' }}{{ inv.discount | cop }}</td>
+              <td class="font-mono cell-amount">{{ inv.amount | cop }}</td>
+              <td class="font-mono cell-amount">{{ inv.tax | cop }}</td>
+              <td class="font-mono cell-amount cell-total">{{ inv.total | cop }}</td>
+              <td class="cell-date">{{ inv.dueDate | date:'dd/MM/yyyy' }}</td>
+              <td><app-status-badge [status]="inv.status" /></td>
+              <td style="text-align:center">
+                @if (inv.status === 'PAID') {
+                  <span class="paid-stamp"><i class="pi pi-check-circle"></i> {{ inv.paidAt | date:'dd/MM/yy' }}</span>
+                } @else {
+                  <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small"
+                    (onClick)="openInvMenu($event, inv, globalInvMenu)" />
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="9" class="empty-msg">No hay facturas generadas</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+
+  <!-- Menús contextuales compartidos (fuera de las tablas) -->
+  <p-menu #globalSubMenu [model]="subMenuItems" [popup]="true" appendTo="body" />
+  <p-menu #globalInvMenu [model]="invMenuItems" [popup]="true" appendTo="body" />
+
+  <!-- Dialog: Asignar Plan -->
+  <p-dialog [(visible)]="showAssignDialog" [modal]="true" [style]="{width:'520px'}"
+    [draggable]="false" [closable]="true" [contentStyle]="{'overflow':'visible'}">
+    <ng-template pTemplate="header">
+      <div class="dialog-header-custom">
+        <i class="pi pi-user-plus"></i>
+        <span>Asignar Plan a Cliente</span>
+      </div>
+    </ng-template>
+
+    <div class="dialog-body">
+      <div class="dialog-info">
+        <i class="pi pi-info-circle"></i>
+        Selecciona un cliente y un plan para crear una nueva suscripción con fechas automáticas.
+      </div>
+
+      <div class="dialog-field">
+        <label><i class="pi pi-user"></i> Cliente</label>
+        <p-dropdown [options]="userOptions()" [(ngModel)]="assignUserId"
+          placeholder="Buscar y seleccionar cliente..."
+          optionLabel="label" optionValue="value"
+          styleClass="w-full" [filter]="true" filterPlaceholder="Escriba el nombre..."
+          appendTo="body" />
+      </div>
+
+      <div class="dialog-field">
+        <label><i class="pi pi-tag"></i> Plan a asignar</label>
+        <p-dropdown [options]="planOptions()" [(ngModel)]="assignPlanId"
+          placeholder="Seleccionar plan..."
+          optionLabel="label" optionValue="value" styleClass="w-full"
+          appendTo="body" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="showAssignDialog = false" />
+        <p-button label="Asignar Plan" icon="pi pi-check" severity="danger" (onClick)="onAssignPlan()" [loading]="assigning()" [disabled]="!assignUserId || !assignPlanId" />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Dialog: Cambiar Plan -->
+  <p-dialog [(visible)]="showChangePlanDialog" [modal]="true" [style]="{width:'520px'}"
+    [draggable]="false" [closable]="true" [contentStyle]="{'overflow':'visible'}">
+    <ng-template pTemplate="header">
+      <div class="dialog-header-custom">
+        <i class="pi pi-sync"></i>
+        <span>Cambiar Plan de Suscripción</span>
+      </div>
+    </ng-template>
+
+    <div class="dialog-body">
+      <div class="dialog-info">
+        <i class="pi pi-info-circle"></i>
+        Se cancelará la suscripción actual y se creará una nueva con el plan seleccionado.
+      </div>
+
+      <div class="change-plan-summary">
+        <div class="summary-row">
+          <span class="summary-label">Cliente</span>
+          <span class="summary-value">{{ changePlanUserName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Plan actual</span>
+          <span class="summary-value current">{{ changePlanCurrentName }}</span>
+        </div>
+      </div>
+
+      <div class="dialog-field">
+        <label><i class="pi pi-arrow-right"></i> Nuevo plan</label>
+        <p-dropdown [options]="planOptions()" [(ngModel)]="changePlanNewId"
+          placeholder="Seleccionar nuevo plan..."
+          optionLabel="label" optionValue="value" styleClass="w-full"
+          appendTo="body" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="showChangePlanDialog = false" />
+        <p-button label="Cambiar Plan" icon="pi pi-sync" severity="danger" (onClick)="onChangePlan()" [loading]="assigning()" [disabled]="!changePlanNewId" />
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

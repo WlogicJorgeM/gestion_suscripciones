@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "Davivienda Subscriptions API",
+    "description": "API completa: Roles ADMIN/CLIENT, CRUD Planes, Suscripciones, Motor Facturación, Control Acceso, Reportes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api" },
+    { "key": "adminToken", "value": "" },
+    { "key": "clientToken", "value": "" },
+    { "key": "token", "value": "" },
+    { "key": "adminId", "value": "" },
+    { "key": "clientId", "value": "" },
+    { "key": "planBronzeId", "value": "" },
+    { "key": "planSilverId", "value": "" },
+    { "key": "planGoldId", "value": "" },
+    { "key": "planId", "value": "" },
+    { "key": "subscriptionId", "value": "" },
+    { "key": "invoiceId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Auth (Roles)",
+      "item": [
+        {
+          "name": "Register ADMIN",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));pm.test('ADMIN',()=>pm.expect(r.user.role).to.eql('ADMIN'));if(r.accessToken){pm.collectionVariables.set('adminToken',r.accessToken);pm.collectionVariables.set('token',r.accessToken);pm.collectionVariables.set('adminId',r.user.id);}"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"email\": \"admin@davivienda.com\",\n  \"password\": \"Admin123!\",\n  \"fullName\": \"Admin Davivienda\",\n  \"role\": \"ADMIN\"\n}"}, "url": {"raw":"{{baseUrl}}/auth/register","host":["{{baseUrl}}"],"path":["auth","register"]} }
+        },
+        {
+          "name": "Register CLIENT",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));pm.test('CLIENT',()=>pm.expect(r.user.role).to.eql('CLIENT'));if(r.accessToken){pm.collectionVariables.set('clientToken',r.accessToken);pm.collectionVariables.set('clientId',r.user.id);}"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"email\": \"cliente@davivienda.com\",\n  \"password\": \"Client123!\",\n  \"fullName\": \"Cliente Davivienda\"\n}"}, "url": {"raw":"{{baseUrl}}/auth/register","host":["{{baseUrl}}"],"path":["auth","register"]} }
+        },
+        {
+          "name": "Login ADMIN",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('200',()=>pm.response.to.have.status(200));pm.test('ADMIN',()=>pm.expect(r.user.role).to.eql('ADMIN'));if(r.accessToken){pm.collectionVariables.set('adminToken',r.accessToken);pm.collectionVariables.set('token',r.accessToken);pm.collectionVariables.set('adminId',r.user.id);}"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"email\": \"admin@davivienda.com\",\n  \"password\": \"Admin123!\"\n}"}, "url": {"raw":"{{baseUrl}}/auth/login","host":["{{baseUrl}}"],"path":["auth","login"]} }
+        },
+        {
+          "name": "Login CLIENT",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('200',()=>pm.response.to.have.status(200));pm.test('CLIENT',()=>pm.expect(r.user.role).to.eql('CLIENT'));if(r.accessToken){pm.collectionVariables.set('clientToken',r.accessToken);pm.collectionVariables.set('clientId',r.user.id);}"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "body": {"mode":"raw","raw":"{\n  \"email\": \"cliente@davivienda.com\",\n  \"password\": \"Client123!\"\n}"}, "url": {"raw":"{{baseUrl}}/auth/login","host":["{{baseUrl}}"],"path":["auth","login"]} }
+        },
+        {
+          "name": "Get Profile",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('has role',()=>pm.expect(pm.response.json().role).to.be.a('string'));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": {"raw":"{{baseUrl}}/auth/profile","host":["{{baseUrl}}"],"path":["auth","profile"]} }
+        }
+      ]
+    },
+    {
+      "name": "02 - Plans CRUD (ADMIN only write)",
+      "item": [
+        {
+          "name": "Create Plan Bronce (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));if(r.id){pm.collectionVariables.set('planBronzeId',r.id);pm.collectionVariables.set('planId',r.id);}"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"name\": \"Plan Bronce\",\n  \"type\": \"BRONZE\",\n  \"price\": 50000,\n  \"description\": \"Plan básico\",\n  \"features\": [\"Acceso básico\",\"Soporte email\",\"1 usuario\"],\n  \"durationDays\": 30\n}"}, "url": {"raw":"{{baseUrl}}/plans","host":["{{baseUrl}}"],"path":["plans"]} }
+        },
+        {
+          "name": "Create Plan Silver (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));if(r.id)pm.collectionVariables.set('planSilverId',r.id);"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"name\": \"Plan Silver\",\n  \"type\": \"SILVER\",\n  \"price\": 100000,\n  \"description\": \"Plan intermedio - 10% descuento\",\n  \"features\": [\"Acceso completo\",\"Soporte prioritario\",\"5 usuarios\",\"Reportes\"],\n  \"durationDays\": 60\n}"}, "url": {"raw":"{{baseUrl}}/plans","host":["{{baseUrl}}"],"path":["plans"]} }
+        },
+        {
+          "name": "Create Plan Gold (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));if(r.id)pm.collectionVariables.set('planGoldId',r.id);"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"name\": \"Plan Gold\",\n  \"type\": \"GOLD\",\n  \"price\": 200000,\n  \"description\": \"Plan premium - 25% descuento\",\n  \"features\": [\"Acceso ilimitado\",\"Soporte 24/7\",\"Usuarios ilimitados\",\"Reportes avanzados\",\"API\"],\n  \"durationDays\": 90\n}"}, "url": {"raw":"{{baseUrl}}/plans","host":["{{baseUrl}}"],"path":["plans"]} }
+        },
+        {
+          "name": "Get All Plans",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('array',()=>pm.expect(pm.response.json()).to.be.an('array'));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": {"raw":"{{baseUrl}}/plans","host":["{{baseUrl}}"],"path":["plans"]} }
+        },
+        {
+          "name": "Get Plan by ID",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": {"raw":"{{baseUrl}}/plans/{{planId}}","host":["{{baseUrl}}"],"path":["plans","{{planId}}"]} }
+        },
+        {
+          "name": "Update Plan (ADMIN)",
+          "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"price\": 55000,\n  \"description\": \"Plan actualizado\"\n}"}, "url": {"raw":"{{baseUrl}}/plans/{{planId}}","host":["{{baseUrl}}"],"path":["plans","{{planId}}"]} }
+        },
+        {
+          "name": "CLIENT intenta crear plan (403)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 Forbidden',()=>pm.response.to.have.status(403));"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{clientToken}}"}], "body": {"mode":"raw","raw":"{\n  \"name\": \"Hack\",\n  \"type\": \"BRONZE\",\n  \"price\": 1,\n  \"description\": \"No\",\n  \"features\": [\"x\"],\n  \"durationDays\": 1\n}"}, "url": {"raw":"{{baseUrl}}/plans","host":["{{baseUrl}}"],"path":["plans"]} }
+        }
+      ]
+    },
+    {
+      "name": "03 - Subscriptions (Asignación de planes)",
+      "item": [
+        {
+          "name": "ADMIN asigna Plan Bronce a CLIENT",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));pm.test('ACTIVE',()=>pm.expect(r.status).to.eql('ACTIVE'));pm.test('has dates',()=>{pm.expect(r.startDate).to.exist;pm.expect(r.endDate).to.exist;});if(r.id)pm.collectionVariables.set('subscriptionId',r.id);"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"userId\": \"{{clientId}}\",\n  \"planId\": \"{{planBronzeId}}\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions","host":["{{baseUrl}}"],"path":["subscriptions"]} }
+        },
+        {
+          "name": "Get All Subscriptions (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('array',()=>pm.expect(pm.response.json()).to.be.an('array'));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/subscriptions","host":["{{baseUrl}}"],"path":["subscriptions"]} }
+        },
+        {
+          "name": "Filter by Status ACTIVE (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));const r=pm.response.json();r.forEach(s=>pm.test('ACTIVE',()=>pm.expect(s.status).to.eql('ACTIVE')));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/subscriptions?status=ACTIVE","host":["{{baseUrl}}"],"path":["subscriptions"],"query":[{"key":"status","value":"ACTIVE"}]} }
+        },
+        {
+          "name": "Filter by Status EXPIRED (ADMIN)",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/subscriptions?status=EXPIRED","host":["{{baseUrl}}"],"path":["subscriptions"],"query":[{"key":"status","value":"EXPIRED"}]} }
+        },
+        {
+          "name": "Get Subscription by ID",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": {"raw":"{{baseUrl}}/subscriptions/{{subscriptionId}}","host":["{{baseUrl}}"],"path":["subscriptions","{{subscriptionId}}"]} }
+        },
+        {
+          "name": "Get User Subscriptions",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": {"raw":"{{baseUrl}}/subscriptions/user/{{clientId}}","host":["{{baseUrl}}"],"path":["subscriptions","user","{{clientId}}"]} }
+        },
+        {
+          "name": "My Subscriptions (CLIENT token)",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/subscriptions/me/current","host":["{{baseUrl}}"],"path":["subscriptions","me","current"]} }
+        },
+        {
+          "name": "Update Status to EXPIRED (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('EXPIRED',()=>pm.expect(pm.response.json().status).to.eql('EXPIRED'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"EXPIRED\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions/{{subscriptionId}}/status","host":["{{baseUrl}}"],"path":["subscriptions","{{subscriptionId}}","status"]} }
+        },
+        {
+          "name": "Reactivate to ACTIVE (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('ACTIVE',()=>pm.expect(pm.response.json().status).to.eql('ACTIVE'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"ACTIVE\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions/{{subscriptionId}}/status","host":["{{baseUrl}}"],"path":["subscriptions","{{subscriptionId}}","status"]} }
+        }
+      ]
+    },
+    {
+      "name": "04 - Billing (Motor Facturación)",
+      "description": "Motor que calcula monto según plan (Strategy Pattern) y gestiona estados de factura",
+      "item": [
+        {
+          "name": "Process Payment (genera factura automática)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));pm.test('has billing',()=>{pm.expect(r.amount).to.be.a('number');pm.expect(r.tax).to.be.a('number');pm.expect(r.total).to.be.a('number');});pm.test('PENDING',()=>pm.expect(r.status).to.eql('PENDING'));if(r.id)pm.collectionVariables.set('invoiceId',r.id);"] }}],
+          "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"subscriptionId\": \"{{subscriptionId}}\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions/payment","host":["{{baseUrl}}"],"path":["subscriptions","payment"]} }
+        },
+        {
+          "name": "Check Expirations (motor automático ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('201',()=>pm.response.to.have.status(201));pm.test('has counts',()=>{pm.expect(r.expiredSubscriptions).to.be.a('number');pm.expect(r.overdueInvoices).to.be.a('number');pm.expect(r.checkedAt).to.exist;});"] }}],
+          "request": { "method": "POST", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/billing/check-expirations","host":["{{baseUrl}}"],"path":["billing","check-expirations"]} }
+        }
+      ]
+    },
+    {
+      "name": "05 - Invoices (Facturas)",
+      "item": [
+        {
+          "name": "Get All Invoices (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('array',()=>pm.expect(pm.response.json()).to.be.an('array'));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/invoices","host":["{{baseUrl}}"],"path":["invoices"]} }
+        },
+        {
+          "name": "Get Invoice by ID (requiere suscripción activa)",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/{{invoiceId}}","host":["{{baseUrl}}"],"path":["invoices","{{invoiceId}}"]} }
+        },
+        {
+          "name": "Get Invoices by Subscription",
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/subscription/{{subscriptionId}}","host":["{{baseUrl}}"],"path":["invoices","subscription","{{subscriptionId}}"]} }
+        },
+        {
+          "name": "Mark Invoice as PAID (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('200',()=>pm.response.to.have.status(200));pm.test('PAID',()=>pm.expect(r.status).to.eql('PAID'));pm.test('paidAt',()=>pm.expect(r.paidAt).to.be.a('string'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/{{invoiceId}}/pay","host":["{{baseUrl}}"],"path":["invoices","{{invoiceId}}","pay"]} }
+        },
+        {
+          "name": "Mark Invoice as OVERDUE (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('200',()=>pm.response.to.have.status(200));pm.test('OVERDUE',()=>pm.expect(r.status).to.eql('OVERDUE'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/{{invoiceId}}/overdue","host":["{{baseUrl}}"],"path":["invoices","{{invoiceId}}","overdue"]} }
+        }
+      ]
+    },
+    {
+      "name": "06 - Reports (ADMIN)",
+      "item": [
+        {
+          "name": "Get General Report",
+          "event": [{ "listen": "test", "script": { "exec": ["const r=pm.response.json();pm.test('200',()=>pm.response.to.have.status(200));pm.test('counts',()=>{pm.expect(r.totalActiveSubscriptions).to.be.a('number');pm.expect(r.totalExpiredSubscriptions).to.be.a('number');});pm.test('revenue',()=>{pm.expect(r.totalRevenue).to.be.a('number');pm.expect(r.periodRevenue).to.be.a('number');});"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/reports","host":["{{baseUrl}}"],"path":["reports"]} }
+        },
+        {
+          "name": "Get Report by Date Range",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('period',()=>{const r=pm.response.json();pm.expect(r.periodStart).to.exist;pm.expect(r.periodEnd).to.exist;});"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"}], "url": {"raw":"{{baseUrl}}/reports?startDate=2026-01-01&endDate=2026-12-31","host":["{{baseUrl}}"],"path":["reports"],"query":[{"key":"startDate","value":"2026-01-01"},{"key":"endDate","value":"2026-12-31"}]} }
+        },
+        {
+          "name": "CLIENT intenta ver reportes (403)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 Forbidden',()=>pm.response.to.have.status(403));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/reports","host":["{{baseUrl}}"],"path":["reports"]} }
+        }
+      ]
+    },
+    {
+      "name": "07 - Control de Acceso (Suscripción Vencida)",
+      "description": "Pruebas que validan que un CLIENT con suscripción EXPIRED no puede acceder a funcionalidades protegidas",
+      "item": [
+        {
+          "name": "1. Expire subscription first (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('EXPIRED',()=>pm.expect(pm.response.json().status).to.eql('EXPIRED'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"EXPIRED\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions/{{subscriptionId}}/status","host":["{{baseUrl}}"],"path":["subscriptions","{{subscriptionId}}","status"]} }
+        },
+        {
+          "name": "2. CLIENT tries to view invoice (403 blocked)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 - Subscription expired',()=>pm.response.to.have.status(403));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/{{invoiceId}}","host":["{{baseUrl}}"],"path":["invoices","{{invoiceId}}"]} }
+        },
+        {
+          "name": "3. Reactivate subscription (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200',()=>pm.response.to.have.status(200));pm.test('ACTIVE',()=>pm.expect(pm.response.json().status).to.eql('ACTIVE'));"] }}],
+          "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}], "body": {"mode":"raw","raw":"{\n  \"status\": \"ACTIVE\"\n}"}, "url": {"raw":"{{baseUrl}}/subscriptions/{{subscriptionId}}/status","host":["{{baseUrl}}"],"path":["subscriptions","{{subscriptionId}}","status"]} }
+        },
+        {
+          "name": "4. CLIENT can now view invoice (200 OK)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 - Access granted',()=>pm.response.to.have.status(200));"] }}],
+          "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{clientToken}}"}], "url": {"raw":"{{baseUrl}}/invoices/{{invoiceId}}","host":["{{baseUrl}}"],"path":["invoices","{{invoiceId}}"]} }
+        }
+      ]
+    }
+  ]
+}

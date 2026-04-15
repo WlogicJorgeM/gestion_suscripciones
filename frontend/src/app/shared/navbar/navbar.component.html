@@ -1,0 +1,40 @@
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="navbar-brand">
+      <div class="brand-logo">D</div>
+      <div>
+        <div class="brand-text">Davivienda</div>
+        <div class="brand-sub">Gestión de Suscripciones</div>
+      </div>
+    </div>
+
+    @if (authService.isAuthenticated()) {
+      <div class="navbar-right">
+        @if (authService.isAdmin()) {
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+            <i class="pi pi-th-large"></i> Panel Admin
+          </a>
+        }
+        @if (authService.isClient()) {
+          <a routerLink="/portal" routerLinkActive="active" class="nav-link">
+            <i class="pi pi-home"></i> Mi Portal
+          </a>
+        }
+
+        <div class="nav-separator"></div>
+
+        <div class="user-info">
+          <div class="user-avatar">{{ initials }}</div>
+          <div>
+            <div class="user-name">{{ authService.user()?.fullName }}</div>
+            <div class="user-role">{{ authService.user()?.role === 'ADMIN' ? 'Administrador' : 'Cliente' }}</div>
+          </div>
+        </div>
+
+        <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+          <i class="pi pi-sign-out"></i>
+        </button>
+      </div>
+    }
+  </div>
+</div>

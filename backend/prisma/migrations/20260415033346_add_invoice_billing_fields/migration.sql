@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "invoices" ADD COLUMN     "basePrice" DECIMAL(10,2) NOT NULL DEFAULT 0,
+ADD COLUMN     "discount" DECIMAL(10,2) NOT NULL DEFAULT 0;

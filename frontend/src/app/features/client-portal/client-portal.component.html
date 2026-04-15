@@ -1,0 +1,136 @@
+<p-toast position="top-right" />
+
+<div class="portal">
+  <div class="portal-header">
+    <div class="header-icon"><i class="pi pi-home"></i></div>
+    <div>
+      <h2>Mi Portal</h2>
+      <span class="subtitle">Bienvenido, {{ auth.user()?.fullName }}</span>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-card">
+      <p-progressSpinner strokeWidth="3" styleClass="w-4rem h-4rem" />
+      <p>Cargando tu información...</p>
+    </div>
+  }
+
+  @if (!loading() && !isActive()) { 
+    <div class="blocked-wrapper">
+      <div class="blocked-bg">
+        <div style="display:grid;grid-template-columns:5fr 2fr;gap:20px">
+          <div style="background:#fff;border-radius:10px;height:200px"></div>
+          <div style="background:#fff;border-radius:10px;height:200px"></div>
+        </div>
+        <div style="background:#fff;border-radius:10px;height:150px;margin-top:20px"></div>
+      </div>
+      <div class="blocked-overlay">
+        <div class="blocked-card">
+          <div class="lock-icon"><i class="pi pi-lock"></i></div>
+          <h3>Acceso Restringido</h3>
+          <p>Tu suscripción se encuentra <strong style="color:#DC2626">VENCIDA</strong>. Las funcionalidades están deshabilitadas hasta que se renueve tu plan.</p>
+          <div class="info-line"><i class="pi pi-info-circle"></i>Contacta al administrador para renovar tu suscripción.</div>
+          <p-tag value="SUSCRIPCIÓN VENCIDA" severity="danger" icon="pi pi-exclamation-triangle" />
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!loading() && isActive()) {
+    <div class="status-banner">
+      <div class="banner-left">
+        <div class="banner-icon"><i class="pi pi-check-circle"></i></div>
+        <div>
+          <div class="banner-title">Tu suscripción está ACTIVA</div>
+          <div class="banner-sub"><i class="pi pi-calendar"></i>Vence el {{ activeSub()?.endDate | date:'dd/MM/yyyy' }}</div>
+        </div>
+      </div>
+      <p-tag value="ACTIVA" severity="success" icon="pi pi-check" />
+    </div>
+
+    @if (currentPlan(); as plan) {
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-header">
+            <span><i class="pi pi-star"></i>Detalle de tu Plan</span>
+            <app-status-badge [status]="plan.type" />
+          </div>
+          <div class="plan-body">
+            <h3>{{ plan.name }}</h3>
+            <p class="plan-desc">{{ plan.description }}</p>
+            <div class="features-label">Beneficios incluidos</div>
+            <div class="features-grid">
+              @for (feature of plan.features; track feature) {
+                <div class="feature-item"><i class="pi pi-check-circle"></i>{{ feature }}</div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="price-card">
+          <i class="pi pi-wallet price-icon"></i>
+          <div class="price-label">Precio del Plan</div>
+          <div class="price-value">{{ plan.price | cop }}</div>
+          <div class="price-period">/ {{ plan.durationDays }} días</div>
+          <hr>
+          <div class="price-meta">Duración: {{ plan.durationDays }} días · Tipo: {{ plan.type }}</div>
+        </div>
+      </div>
+    }
+
+    <!-- Facturas con botón de pago -->
+    <div class="invoices-section">
+      <div class="section-header">
+        <div class="section-title"><i class="pi pi-file-edit"></i> Mis Facturas — Estado de Cuenta</div>
+        <p-tag [value]="invoices().length + ' factura(s)'" severity="info" icon="pi pi-file" />
+      </div>
+
+      <div class="table-card">
+        <p-table [value]="invoices()" [paginator]="true" [rows]="5" [rowHover]="true"
+          styleClass="p-datatable-sm" [loading]="loadingInvoices()">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>N° Factura</th>
+              <th>Período</th>
+              <th>Base (COP)</th>
+              <th>Descuento</th>
+              <th>Subtotal</th>
+              <th>IVA 19%</th>
+              <th pSortableColumn="total">Total (COP) <p-sortIcon field="total" /></th>
+              <th>Estado</th>
+              <th style="width:120px;text-align:center">Acción</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-inv>
+            <tr>
+              <td><code class="inv-code">{{ inv.id | slice:0:8 }}</code></td>
+              <td class="cell-text">{{ inv.dueDate | date:'MMMM yyyy' }}</td>
+              <td class="font-mono cell-num">{{ inv.basePrice | cop }}</td>
+              <td class="font-mono cell-num" [class.cell-green]="inv.discount > 0">{{ inv.discount > 0 ? '-' : '' }}{{ inv.discount | cop }}</td>
+              <td class="font-mono cell-num">{{ inv.amount | cop }}</td>
+              <td class="font-mono cell-num">{{ inv.tax | cop }}</td>
+              <td class="font-mono cell-num cell-bold">{{ inv.total | cop }}</td>
+              <td>
+                @if (inv.status === 'PAID') { <p-tag value="Pagada" severity="success" icon="pi pi-check-circle" /> }
+                @if (inv.status === 'PENDING') { <p-tag value="Pendiente" severity="warning" icon="pi pi-clock" /> }
+                @if (inv.status === 'OVERDUE') { <p-tag value="Vencida" severity="danger" icon="pi pi-exclamation-triangle" /> }
+              </td>
+              <td style="text-align:center">
+                @if (inv.status === 'PAID') {
+                  <span class="paid-date"><i class="pi pi-check-circle"></i> {{ inv.paidAt | date:'dd/MM/yy' }}</span>
+                }
+                @if (inv.status === 'PENDING' || inv.status === 'OVERDUE') {
+                  <p-button icon="pi pi-dollar" label="Pagar" size="small" severity="success"
+                    (onClick)="onPayInvoice(inv.id)" [loading]="payingId() === inv.id" />
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="9" class="empty-row">No tienes facturas generadas aún</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>

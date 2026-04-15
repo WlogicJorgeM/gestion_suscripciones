@@ -1,0 +1,145 @@
+:host { display: block; }
+
+.portal {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 36px;
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  padding: 18px 28px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #EAEAEA;
+  margin-bottom: 28px;
+
+  .header-icon {
+    width: 44px; height: 44px; border-radius: 12px; background: #ED1C24;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(237,28,36,0.2);
+    i { color: #fff; font-size: 20px; }
+  }
+  h2 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0; }
+  .subtitle { font-size: 13px; color: #888; margin-top: 2px; }
+}
+
+.loading-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #EAEAEA;
+  p { color: #888; margin-top: 20px; font-size: 14px; }
+}
+
+/* Overlay bloqueo */
+.blocked-wrapper { position: relative; min-height: 400px; }
+.blocked-bg { filter: blur(5px); pointer-events: none; opacity: 0.25; }
+.blocked-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.blocked-card {
+  background: #fff; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  padding: 52px 48px; text-align: center; width: 480px; border: 1px solid #EAEAEA;
+
+  .lock-icon {
+    width: 80px; height: 80px; border-radius: 50%; background: #FEF2F2;
+    display: inline-flex; align-items: center; justify-content: center; margin-bottom: 24px;
+    border: 2px solid #FECACA;
+    i { font-size: 38px; color: #DC2626; }
+  }
+  h3 { font-size: 24px; font-weight: 800; color: #991B1B; margin: 0 0 14px; }
+  p { color: #555; line-height: 1.7; margin: 0 0 24px; font-size: 14px; }
+  .info-line { font-size: 13px; color: #888; margin-bottom: 20px; i { margin-right: 6px; color: #aaa; } }
+}
+
+/* Banner activo */
+.status-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff; border-radius: 10px; padding: 18px 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #EAEAEA;
+  border-left: 4px solid #16A34A;
+  margin-bottom: 28px;
+
+  .banner-left { display: flex; align-items: center; gap: 16px; }
+  .banner-icon {
+    width: 48px; height: 48px; border-radius: 50%; background: #F0FDF4;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #BBF7D0;
+    i { font-size: 22px; color: #16A34A; }
+  }
+  .banner-title { font-size: 17px; font-weight: 700; color: #166534; }
+  .banner-sub { font-size: 13px; color: #16A34A; margin-top: 2px; i { margin-right: 4px; } }
+}
+
+/* Plan detail */
+.plan-grid {
+  display: grid; grid-template-columns: 5fr 2fr; gap: 24px; margin-bottom: 28px;
+}
+.plan-card {
+  background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #EAEAEA; overflow: hidden;
+
+  .plan-header {
+    background: #ED1C24; color: #fff; padding: 14px 24px; font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    i { margin-right: 8px; }
+  }
+  .plan-body { padding: 24px; }
+  h3 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px; }
+  .plan-desc { color: #777; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
+  .features-label { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .feature-item {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444;
+    i { color: #16A34A; font-size: 14px; flex-shrink: 0; }
+  }
+}
+
+.price-card {
+  background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #EAEAEA;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 36px 24px; text-align: center;
+
+  .price-icon { font-size: 40px; color: #ED1C24; margin-bottom: 12px; }
+  .price-label { font-size: 11px; color: #999; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; }
+  .price-value { font-size: 36px; font-weight: 800; color: #ED1C24; margin: 10px 0; font-family: 'Consolas', monospace; }
+  .price-period { font-size: 14px; color: #777; }
+  hr { width: 50%; border: none; border-top: 1px solid #EAEAEA; margin: 20px 0; }
+  .price-meta { font-size: 12px; color: #bbb; }
+}
+
+/* Facturas */
+.invoices-section { margin-top: 4px; }
+
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 15px; font-weight: 700; color: #333;
+  i { color: #ED1C24; margin-right: 8px; }
+}
+
+.table-card {
+  background: #fff; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #EAEAEA;
+}
+
+.inv-code {
+  font-size: 11px; background: #F0F0F0; padding: 3px 8px;
+  border-radius: 4px; font-family: 'Consolas', monospace; color: #555;
+}
+.cell-text { font-size: 13px; color: #555; }
+.cell-num { font-size: 13px; color: #444; }
+.cell-green { color: #16A34A !important; }
+.cell-bold { font-weight: 700 !important; color: #1a1a1a !important; }
+.paid-date { color: #16A34A; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.empty-row { text-align: center; padding: 40px !important; color: #999; }

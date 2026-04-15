@@ -7,7 +7,7 @@ frontend/dist/
 frontend/.angular/
 
 # Environment
-backend/.env
+# backend/.env
 
 # IDE
 .vscode/
